@@ -1,0 +1,76 @@
+$background-color: #67a28f;
+$background-dark-color: #5b5941;
+$primary-color: #f79f79;
+$secondary-color: #f7d08a;
+
+.player {
+  flex: 1;
+  background-color: $background-color;
+
+  .title {
+    height: 25%;    
+  }
+
+  .body {
+    flex: 1;
+
+    .p-button {
+      background-color: $secondary-color;
+      border-color: $secondary-color;
+
+      &.p-disabled {
+        background-color: grey;
+        border-color: grey;
+      }
+  
+      &:enabled:focus, &:enabled:hover, &:enabled:active {
+        background-color: $primary-color;
+        border-color: $primary-color;
+      }
+  
+      &:focus {
+        box-shadow: 0 0 0 0.2rem $secondary-color;
+      }
+  
+      .p-button-label {
+        color: $background-dark-color;
+      }
+    }
+
+    .connected {
+      flex: 1;
+
+      .connected-content {
+        flex: 1;
+
+        .p-button {
+          width: 200px;
+          height: 200px;
+        }
+      }
+    }
+  }
+}
+
+.dialog-display-players {
+  top: 20%;
+
+  .p-dialog-content {
+    padding: 0.2rem !important;
+
+    .p-d-flex {
+      padding-top: 5px;
+      padding-bottom: 5px;
+
+      .p-button {
+        flex: 0 0 46%;
+        margin-bottom: 5px;
+        height: 50px;
+
+        &:nth-child(odd) {
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+}

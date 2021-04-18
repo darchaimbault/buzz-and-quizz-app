@@ -1,0 +1,29 @@
+.admin {
+  flex: 1;
+
+  .admin-content {
+    flex: 1;
+
+    .admin-body {
+      flex: 1;
+    }
+  }
+
+  .p-menubar {
+    width: 100%;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+
+    .p-menubar-root-list {
+      flex: 1;
+      flex-direction: row;
+      justify-content: center;
+
+      .p-menuitem-link {
+        padding: 1.75rem 2rem !important;
+        border-radius: 0 !important;
+      }
+    }
+  }
+}
