@@ -18,7 +18,7 @@
     .p-menubar-root-list {
       flex: 1;
       flex-direction: row;
-      justify-content: center;
+      justify-content: space-around;
 
       .p-menuitem-link {
         padding: 1.75rem 2rem !important;

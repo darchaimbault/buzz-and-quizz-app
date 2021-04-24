@@ -1,0 +1,41 @@
+.games-menu {
+  .p-tieredmenu {
+    flex: 1;
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    padding: 0;
+    border-radius: 0;
+
+    .menu-item {
+      &:hover {
+        background-color: var(--bluegray-50);
+      }
+
+      &.item-selected {
+        background-color: var(--cyan-100);
+      }
+
+      &.item-finished {
+        .p-menuitem-icon {
+          color: var(--blue-500);
+        }
+      }
+
+      &.item-active {
+        background-color: var(--green-100) !important;
+        .p-menuitem-icon {
+          color: var(--green-500);
+        }
+      }
+
+      .p-menuitem-icon {
+        color: var(--yellow-400);
+      }
+    }
+  }
+
+  .create-button {
+    border-radius: 0;
+  }
+}

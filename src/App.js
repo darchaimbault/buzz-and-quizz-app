@@ -6,7 +6,7 @@ import {
 } from 'react-router-dom';
 import Player from './views/player';
 import Monitor from './views/monitor/monitor'
-import Admin from './views/admin';
+import Admin from './views/admin/admin';
 import './App.scss';
 
 function App() {
