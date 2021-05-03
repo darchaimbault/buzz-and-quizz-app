@@ -4,8 +4,18 @@ import queryString from 'query-string';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { socket } from '../core/services/socket';
+import range from 'lodash/range';
+import random from 'lodash/random';
+import classnames from 'classnames';
 
 import './styles/player.scss';
+
+const colorTintsRange = range(500, 800, 100);
+const colorRange = ['blue', 'yellow', 'cyan', 'pink', 'indigo', 'teal', 'orange', 'bluegray', 'purple'];
+
+const playerColorTint = colorTintsRange[random(0, colorTintsRange.length)];
+const playerColor = colorRange[random(0, colorRange.length)];
+const playerColorValue = `var(--${playerColor}-${playerColorTint})`;
 
 function NotConnectedComponent(props) {
   return (
@@ -15,19 +25,23 @@ function NotConnectedComponent(props) {
 };
 
 function ConnectedComponent(props) {
-  const { onClick, onClickBuzz, isFrozen } = props;
+  const { onClickDisconnect, onClickBuzz, isFrozen, isBuzzed } = props;
+  const classNames = {
+    'buzz-frozen': isFrozen,
+    'buzz-buzzed': isBuzzed
+  };
+
   return (
     <div className="connected p-d-flex p-flex-column">
       <div className="connected-content p-d-flex p-ai-center p-jc-center">
         <Button
-          icon="pi pi-circle-on"
-          className="p-button-raised p-button-rounded"
+          className={classnames('buzz p-button-raised p-button-rounded', classNames)}
           onClick={onClickBuzz}
           disabled={isFrozen}
         />
       </div>
       <div className="footer p-d-flex p-jc-center">
-        <Button label="Disconnect" onClick={onClick} />
+        <Button label="Disconnect" onClick={onClickDisconnect} />
       </div>
     </div>
   );
@@ -36,22 +50,20 @@ function ConnectedComponent(props) {
 function Player() {
   const [isConnected, setIsConnected] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
+  const [isBuzzed, setIsBuzzed] = useState(false);
   const [isDisplayPlayers, setIsDisplayPlayers] = useState(false);
   const [user, setUser] = useState(null);
   const [availablePlayers, setAvailablePlayers] = useState(null);
   const [players, setPlayers] = useState([]);
   const [activeGame, setActiveGame] = useState(null);
 
-  useEffect(() => {
-    socket.open();
-  }, []);
-
   const fetchActiveGame = useCallback(() => {
     axios.get(queryString.stringifyUrl({ url: '/games/active' }))
       .then(({ data: activeGame }) => {
         setActiveGame(activeGame);
+        const socketId = socket.id;
 
-        axios.get(queryString.stringifyUrl({ url: '/users/' }))
+        axios.get(queryString.stringifyUrl({ url: '/users/', query: { socketId } }))
           .then(({ data: players }) => {
             if (!availablePlayers) {
               setAvailablePlayers(players);
@@ -69,7 +81,11 @@ function Player() {
   }, [availablePlayers]);
 
   useEffect(() => {
-    fetchActiveGame();
+    socket.open();
+
+    socket.on('connect', () => {
+      fetchActiveGame();
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,6 +109,10 @@ function Player() {
     setAvailablePlayers(newAvailablePlayers);
   }, [availablePlayers, players]);
 
+  const handleClickDisconnect = useCallback(() => {
+    document.location.reload();
+  }, []);
+
   useEffect(() => {
     socket.on('player:game:start', () => {
       fetchActiveGame();
@@ -100,6 +120,10 @@ function Player() {
 
     socket.on('player:game:freeze', () => {
       setIsFrozen(true);
+    });
+
+    socket.on('players:game:freeze', () => {
+      setIsFrozen(!isFrozen);
     });
 
     socket.on('player:game:unfreeze', () => {
@@ -113,15 +137,23 @@ function Player() {
     socket.on('player:players:unavailable', (playerId) => {
       removeAvailablePlayer(playerId);
     });
-  });
+    
+    socket.on('player:game:false', ({ time = 5 }) => {
+      setIsBuzzed(false);
+      setIsFrozen(true);
+      setTimeout(() => {
+        setIsFrozen(false);
+      }, time * 1000);
+    });
 
-  const handleClickDisconnect = useCallback(() => {
-    if (isConnected) {
-      socket.close();
-      setIsConnected(false);
-      setUser(null);
-    }
-  }, [isConnected]);
+    socket.on('player:game:cancel', () => {
+      setIsBuzzed(false);
+    });
+
+    socket.on('player:disconnect', () => {
+      handleClickDisconnect();
+    });
+  });
 
   const handleClickPlayer = useCallback(async (player) => {
     const socketId = socket.id;
@@ -137,24 +169,28 @@ function Player() {
 
   const handleClickBuzz = useCallback(async () => {
     socket.emit('player:game:buzz');
+    setIsBuzzed(true);
   }, []);
 
   const title = useMemo(() => {
     if (user) {
-      return 'Hello ' + user.nickname;
+      return user.nickname;
     }
     return 'New Player'
   }, [user]);
 
   return (
     <div className="player p-d-flex p-flex-column">
-      <div className="title">
+      <div className="title p-d-flex p-ai-center p-jc-center" style={{ color: playerColorValue }}>
         {title}
       </div>
       <div className="body p-d-flex">
         {
           !activeGame &&
-            <div>No Game</div>
+            <div className="no-game p-flex-column p-d-flex p-ai-center p-jc-center">
+              <div className="pi pi-ban" />
+              No Game
+            </div>
         }
         {
           (activeGame && !isConnected) &&
@@ -167,6 +203,7 @@ function Player() {
               onClickDisconnect={handleClickDisconnect}
               onClickBuzz={handleClickBuzz}
               isFrozen={isFrozen}
+              isBuzzed={isBuzzed}
             />
         }
       </div>
@@ -178,7 +215,6 @@ function Player() {
         draggable={false}
         resizable={false}
         className="dialog-display-players"
-        style={{width: '75vw'}}
         header="Qui est-tu ?"
         position="top"
         onHide={() => {}}

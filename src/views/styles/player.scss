@@ -8,45 +8,97 @@ $secondary-color: #f7d08a;
   background-color: $background-color;
 
   .title {
-    height: 25%;    
+    height: 20%;
+    font-size: 40px;
   }
 
   .body {
     flex: 1;
 
-    .p-button {
-      background-color: $secondary-color;
-      border-color: $secondary-color;
+    .no-game {
+      flex: 1;
+      font-size: 40px;
 
-      &.p-disabled {
-        background-color: grey;
-        border-color: grey;
-      }
-  
-      &:enabled:focus, &:enabled:hover, &:enabled:active {
-        background-color: $primary-color;
-        border-color: $primary-color;
-      }
-  
-      &:focus {
-        box-shadow: 0 0 0 0.2rem $secondary-color;
-      }
-  
-      .p-button-label {
-        color: $background-dark-color;
+      .pi-ban {
+        font-size: 60px;
       }
     }
 
     .connected {
       flex: 1;
 
+      .buzz, .p-button {
+        background-color: $secondary-color;
+        border-color: $secondary-color;
+  
+        &.p-disabled {
+          background-color: grey;
+          border-color: grey;
+        }
+    
+        &:enabled:focus, &:enabled:hover, &:enabled:active {
+          background-color: $secondary-color;
+          border-color: $secondary-color;
+        }
+    
+        &:focus {
+          box-shadow: 0 0 0 0.2rem $secondary-color;
+        }
+    
+        .p-button-label {
+          color: $background-dark-color;
+        }
+      }
+
       .connected-content {
         flex: 1;
 
-        .p-button {
+        .buzz {
           width: 200px;
           height: 200px;
+          border-radius: 50%;
+
+          &.buzz-buzzed {
+            background-color: $primary-color;
+            border-color: $primary-color;
+
+            &:focus {
+              box-shadow: 0 0 0 0.2rem $primary-color;
+            }
+          }
         }
+
+        @media screen and (min-height: 1000px) and (min-width: 1000px) {
+          .buzz {
+            width: 500px;
+            height: 500px;
+          }
+        }
+
+        @media screen and (max-height: 400px) {
+          .buzz {
+            width: 200px;
+            height: 200px;
+          }
+        }
+
+        @media screen and (max-width: 500px) {
+          .buzz {
+            width: 350px;
+            height: 350px;
+          }
+        }
+
+        @media screen and (max-width: 400px) {
+          .buzz {
+            width: 250px;
+            height: 250px;
+          }
+        }
+      }
+
+      .footer {
+        margin-bottom: 10px;
       }
     }
   }
@@ -54,6 +106,7 @@ $secondary-color: #f7d08a;
 
 .dialog-display-players {
   top: 20%;
+  width: 90vw !important;
 
   .p-dialog-content {
     padding: 0.2rem !important;
