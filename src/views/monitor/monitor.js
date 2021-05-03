@@ -31,7 +31,7 @@ function Monitor() {
   const history = useHistory();
 
   const fetchActiveGame = useCallback(() => {
-    axios.get(queryString.stringifyUrl({ url: '/games/active' }))
+    axios.get(queryString.stringifyUrl({ url: '/games/active', query: { withPlayers: true } }))
       .then(data => {
         setActiveGame(data);
       })
@@ -70,6 +70,10 @@ function Monitor() {
     });
 
     socket.on('monitor:game:start', () => {
+      fetchActiveGame();
+    });
+
+    socket.on('monitor:game:score', () => {
       fetchActiveGame();
     });
 
