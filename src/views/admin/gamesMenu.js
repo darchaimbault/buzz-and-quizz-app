@@ -25,15 +25,15 @@ function GamesMenu(props) {
       currentGames.push(data);
 
       setGames(currentGames);
+      setSelectedGame(data);
     }
-  }, [games, setGames]);
+  }, [games, setGames, setSelectedGame]);
 
   const handleClickGame = useCallback(game => {
     setSelectedGame(game);
   }, [setSelectedGame]);
 
   const getMenuItemTemplate = useCallback((item, options, game) => {
-    console.log(item, options)
     const { className } = options;
 
     const isSelected = selectedGame && selectedGame.id === game.id;

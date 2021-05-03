@@ -12,23 +12,24 @@ import { AdminContext } from './context/adminContext';
 import { Button } from 'primereact/button';
 
 const PlayerFooterCard = (props) => {
-  const { player } = props;
+  const { player, onClickPlayerToggleFreeze } = props;
   return (
     <div className="player-card-footer p-d-flex p-flex-row p-jc-between">
-      <Button label="Freeze" />
+      <Button label="Freeze" onClick={() => onClickPlayerToggleFreeze(player)} />
       <div>{player.score.value}</div>
     </div>
   )
 }
 
 const PlayersGrid = (props) => {
-  const { players } = props;
+  const { players, onClickDisconnect, onClickPlayerToggleFreeze } = props;
   return (
     <div className="players-grid p-d-flex p-flex-row p-flex-wrap p-jc-center">
       {players.map(player => {
         return (
-          <Card footer={<PlayerFooterCard player={player} />}>
+          <Card footer={<PlayerFooterCard player={player} onClickPlayerToggleFreeze={onClickPlayerToggleFreeze} />}>
             {player.nickname}
+            <div className="pi pi-ban" onClick={() => onClickDisconnect(player)} />
           </Card>
         )
       })}
@@ -36,12 +37,51 @@ const PlayersGrid = (props) => {
   )
 }
 
+const BuzzerView = (props) => {
+  const { player, resetBuzzer } = props;
+
+  const handleClickFalse = useCallback(() => {
+    socket.emit('admin:game:false');
+    resetBuzzer();
+  }, [resetBuzzer]);
+
+  const handleClickCancel = useCallback(() => {
+    socket.emit('admin:game:cancel');
+    resetBuzzer();
+  }, [resetBuzzer]);
+
+  const handleClickAddPoint = useCallback((point) => {
+    socket.emit('admin:game:addPoint', {
+      point
+    });
+    resetBuzzer();
+  }, [resetBuzzer]);
+
+  return (
+    <div className="buzzer-container p-d-flex p-jc-center p-ai-center">
+      <div className="buzzer-body">
+        <div className="buzzer-nickname">{player.nickname}</div>
+        <div className="buzzer-add-point">
+          <Button label="+1" onClick={() => handleClickAddPoint(1)} />
+          <Button label="+2" onClick={() => handleClickAddPoint(2)} />
+          <Button label="+3" onClick={() => handleClickAddPoint(3)} />
+        </div>
+        <div className="buzzer-buttons-container">
+          <Button label="FALSE" onClick={handleClickFalse} />
+          <Button label="CANCEL" onClick={handleClickCancel} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function Admin() {
   const [isPodiumOpen, setIsPodiumOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(false);
   const [activeGame, setActiveGame] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [currentPlayers, setCurrentPlayers] = useState([]);
+  const [currentBuzzer, setCurrentBuzzer] = useState(null);
   const [games, setGames] = useState([]);
 
   const fetchActiveGame = useCallback(async () => {
@@ -75,6 +115,14 @@ function Admin() {
     setGames(currentGames);
   }, [games]);
 
+  const handleBuzz = useCallback(({ userId }) => {
+    setCurrentBuzzer(currentPlayers.find(player => player.id === userId));
+  }, [currentPlayers]);
+
+  const resetBuzzer = useCallback(() => {
+    setCurrentBuzzer(null);
+  }, []);
+
   useEffect(() => {
     socket.auth = { admin: true };
     socket.open();
@@ -84,10 +132,10 @@ function Admin() {
   }, []);
 
   useEffect(() => {
-    socket.on('admin:player:join', () => {
-      fetchActiveGame();
-    });
-  }, [fetchActiveGame]);
+    socket.on('admin:player:join', fetchActiveGame);
+
+    socket.on('admin:game:buzz', handleBuzz);
+  }, [fetchActiveGame, handleBuzz]);
 
   const handleClickToggleQRCode = useCallback(async () => {
     socket.emit('admin:monitor:join-qr-code');
@@ -146,6 +194,10 @@ function Admin() {
     socket.emit('admin:player:disconnect', { playerId: player.id });
   }, []);
 
+  const handleClickFreezeAll = useCallback(() => {
+    socket.emit('admin:players:freeze');
+  }, []);
+
   const disabledStartStopGameButton = useMemo(() => {
     if (selectedGame != null) {
       if (activeGame != null) {
@@ -195,10 +247,10 @@ function Admin() {
       },
       {
         label: 'Freeze All',
-        command: handleClickToggleQRCode
+        command: handleClickFreezeAll
       }
     ]
-  }, [handleClickToggleQRCode, labelStartStopGameButton, handleClickStartGame, disabledStartStopGameButton, isPodiumOpen, handleClickTogglePodium, isRankingOpen, handleClickToggleRanking]);
+  }, [handleClickToggleQRCode, labelStartStopGameButton, handleClickStartGame, disabledStartStopGameButton, isPodiumOpen, handleClickTogglePodium, isRankingOpen, handleClickToggleRanking, handleClickFreezeAll]);
   
   return (
     <AdminContext.Provider value={{ games, setGames, activeGame, setActiveGame, selectedGame, setSelectedGame, fetchGames }}>
@@ -208,9 +260,14 @@ function Admin() {
           <div className="admin-body">
             <PlayersGrid
               players={currentPlayers}
-              handleClickPlayerToggleFreeze={handleClickPlayerToggleFreeze}
-              handleClickPlayerDisconnect={handleClickPlayerDisconnect}
+              onClickPlayerToggleFreeze={handleClickPlayerToggleFreeze}
+              onClickDisconnect={handleClickPlayerDisconnect}
             />
+            {
+              currentBuzzer && (
+                <BuzzerView player={currentBuzzer} resetBuzzer={resetBuzzer} />
+              )
+            }
           </div>
         </div>
         <Menubar model={menuButtons} />
