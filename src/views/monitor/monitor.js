@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import queryString from 'query-string';
 import { Card } from 'primereact/card';
@@ -9,6 +9,8 @@ import {
   Route
 } from "react-router-dom";
 import { socket } from '../../core/services/socket';
+import omit from 'lodash/omit';
+import classnames from 'classnames';
 
 import Podium from './podium';
 import Ranking from './ranking';
@@ -17,23 +19,47 @@ import ModalRoute from '../../core/components/modalRoute';
 import './styles/monitor.scss';
 
 function PlayerComponent(props) {
-  const { player } = props;
+  const { player, buzzedPlayer, isRight, isFalse, nbPlayers } = props;
+  const isBuzzed = useMemo(() => {
+    return buzzedPlayer && (player.id === buzzedPlayer.id);
+  }, [player, buzzedPlayer]);
+
   return (
-    <Card footer={player.nickname} className="p-m-2">
+    <Card
+      footer={player.nickname}
+      className={classnames('p-m-2', `nb-players-${nbPlayers}`, {
+        'is-buzzed': isBuzzed,
+        'disabled': !isBuzzed && buzzedPlayer,
+        'is-right': isRight,
+        'is-false': isFalse
+      })}
+    >
       <div className="score">{player.score.value}</div>
+      <div className="pi pi-check-circle addPoint" />
+      <div className="pi pi-ban false" />
     </Card>
   );
 }
 
 function Monitor() {
   const [isDisplayQrCode, setIsDisplayQrCode] = useState(false);
+  const [isFalse, setIsFalse] = useState(false);
+  const [isRight, setIsRight] = useState(false);
   const [activeGame, setActiveGame] = useState(null);
+  const [currentPlayers, setCurrentPlayers] = useState([]);
+  const [buzzedPlayer, setBuzzedPlayer] = useState(null);
   const history = useHistory();
 
   const fetchActiveGame = useCallback(() => {
     axios.get(queryString.stringifyUrl({ url: '/games/active', query: { withPlayers: true } }))
-      .then(data => {
-        setActiveGame(data);
+      .then(({ data, status }) => {
+        if (data && status === 200) {
+          setCurrentPlayers(data.users.map(user => ({
+            ...user,
+            isFrozen: false
+          })));
+          setActiveGame(omit(data, ['users']));
+        }
       })
       .catch(error => {
         console.log(error);
@@ -73,8 +99,33 @@ function Monitor() {
       fetchActiveGame();
     });
 
+    socket.on('player:players:unavailable', () => {
+      fetchActiveGame();
+    });
+
     socket.on('monitor:game:score', () => {
       fetchActiveGame();
+      setIsRight(true);
+      setTimeout(() => {
+        setIsRight(false);
+        setBuzzedPlayer(null);
+      }, 1000);
+    });
+
+    socket.on('monitor:game:buzz', ({ userId }) => {
+      setBuzzedPlayer(currentPlayers.find(player => player.id === userId));
+    });
+
+    socket.on('monitor:game:false', () => {
+      setIsFalse(true);
+      setTimeout(() => {
+        setIsFalse(false);
+        setBuzzedPlayer(null);
+      }, 1000);
+    });
+
+    socket.on('monitor:game:cancel', () => {
+      setBuzzedPlayer(null);
     });
 
     socket.on('monitor:podium:open', () => {
@@ -92,44 +143,24 @@ function Monitor() {
     socket.on('monitor:ranking:close', () => {
       closeRanking();
     });
-  }, [isDisplayQrCode, fetchActiveGame, openPodium, closePodium, openRanking, closeRanking]);
-
-  const players = [
-    {
-      "id": 1,
-      "firstname": "Connor",
-      "lastname": "Davies",
-      "nickname": "heavygoose650",
-      "socketId": null,
-      "createdAt": "2021-04-12T20:56:22.675Z",
-      "updatedAt": "2021-04-12T20:56:22.675Z",
-      "score": {
-          "value": 5
-      }
-    },
-    {
-      "id": 2,
-      "firstname": "Lilly",
-      "lastname": "Clarke",
-      "nickname": "bigmeercat739",
-      "socketId": "XRxPPbpXlkqjxmNDAAAV",
-      "createdAt": "2021-04-12T20:56:22.676Z",
-      "updatedAt": "2021-04-12T21:17:27.378Z",
-      "score": {
-          "value": 3
-      }
-    }
-  ];
+  }, [isDisplayQrCode, fetchActiveGame, openPodium, closePodium, openRanking, closeRanking, currentPlayers]);
   
   return (
-    <div className="monitor p-d-flex p-flex-row p-flex-wrap p-ai-start">
+    <div className="monitor p-d-flex p-flex-row p-flex-wrap p-ai-center p-jc-center">
       {
         !activeGame && 
           <div>No Game</div>
       }
-      {activeGame && players.map(player => {
+      {activeGame && currentPlayers.map(player => {
         return (
-          <PlayerComponent player={player} />
+          <PlayerComponent
+            player={player}
+            buzzedPlayer={buzzedPlayer}
+            key={player.id}
+            isFalse={isFalse}
+            isRight={isRight}
+            nbPlayers={currentPlayers.length}
+          />
         )
       })}
 

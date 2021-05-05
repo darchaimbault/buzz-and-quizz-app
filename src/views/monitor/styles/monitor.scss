@@ -9,7 +9,69 @@ $secondary-color: #f7d08a;
 
   .p-card {
     background-color: $secondary-color;
-    width: 48%;
+    width: 49%;
+    position: relative;
+
+    &.nb-players-1, &.nb-players-2, &.nb-players-3, &.nb-players-4 {
+      width: 49%;
+    }
+
+    &.nb-players-5, &.nb-players-6 {
+      width: 32%;
+    }
+
+    &.nb-players-7, &.nb-players-8 {
+      width: 24%;
+    }
+
+    &.nb-players-9, &.nb-players-10 {
+      width: 12%;
+    }
+
+    &.is-buzzed {
+      box-shadow: 0px 0px 31px 12px $secondary-color;
+
+      &.is-right {
+        .addPoint {
+          opacity: 0.9;
+        }
+      }
+  
+      &.is-false {
+        .false {
+          opacity: 0.9;
+        }
+      }
+    }
+
+    &.disabled {
+      opacity: 0.5;
+    }
+
+    .addPoint, .false {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6em;
+      opacity: 0;
+      transition: linear 500ms opacity;
+    }
+
+    .addPoint {
+      background-color: var(--green-200);
+      color: var(--green-700);
+    }
+
+    .false {
+      background-color: var(--pink-200);
+      color: var(--pink-700);
+    }
 
     .p-card-body {
       padding: 0;
