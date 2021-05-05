@@ -1,3 +1,8 @@
+$background-color: #67a28f;
+$background-dark-color: #5b5941;
+$primary-color: #f79f79;
+$secondary-color: #f7d08a;
+
 .admin {
   flex: 1;
 
@@ -73,11 +78,36 @@
       }
 
       .players-grid {
-        .pi-ban {
+        .p-card {
+          background-color: $secondary-color;
+          width: 49%;
           position: relative;
-          top: -30px;
-          right: -12px;
-          cursor: pointer;
+          box-shadow: none;
+          border: 1px solid $background-dark-color;
+          border-radius: 0;
+
+          &.nb-players-1, &.nb-players-2, &.nb-players-3, &.nb-players-4 {
+            width: 49%;
+          }
+
+          &.nb-players-5, &.nb-players-6 {
+            width: 32%;
+          }
+
+          &.nb-players-7, &.nb-players-8 {
+            width: 24%;
+          }
+
+          &.nb-players-9, &.nb-players-10 {
+            width: 12%;
+          }
+
+          .pi-ban {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            cursor: pointer;
+          }
         }
       }
     }

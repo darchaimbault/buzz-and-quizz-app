@@ -5,6 +5,7 @@ import { socket } from '../../core/services/socket';
 import { Menubar } from 'primereact/menubar';
 import omit from 'lodash/omit';
 import { Card } from 'primereact/card';
+import classnames from 'classnames';
 
 import GamesMenu from './gamesMenu';
 import './styles/admin.scss';
@@ -27,7 +28,11 @@ const PlayersGrid = (props) => {
     <div className="players-grid p-d-flex p-flex-row p-flex-wrap p-jc-center">
       {players.map(player => {
         return (
-          <Card footer={<PlayerFooterCard player={player} onClickPlayerToggleFreeze={onClickPlayerToggleFreeze} />}>
+          <Card 
+            footer={<PlayerFooterCard player={player}
+            onClickPlayerToggleFreeze={onClickPlayerToggleFreeze} />}
+            className={classnames('p-m-2', `nb-players-${players.length}`)}
+          >
             {player.nickname}
             <div className="pi pi-ban" onClick={() => onClickDisconnect(player)} />
           </Card>
@@ -265,7 +270,7 @@ function Admin() {
             />
             {
               currentBuzzer && (
-                <BuzzerView player={currentBuzzer} resetBuzzer={resetBuzzer} />
+                <BuzzerView player={currentBuzzer} resetBuzzer={resetBuzzer} fetchActiveGame={fetchActiveGame} />
               )
             }
           </div>
