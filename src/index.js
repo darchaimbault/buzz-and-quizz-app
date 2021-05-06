@@ -4,13 +4,16 @@ import './index.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import axios from 'axios';
+import dotenv from 'dotenv';
 
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
-axios.defaults.baseURL = 'http://192.168.1.15:8085/api';
+dotenv.config();
+
+axios.defaults.baseURL = 'http://' + window.location.hostname + ':8095/api';
 axios.defaults.withCredentials = true;
 
 ReactDOM.render(
