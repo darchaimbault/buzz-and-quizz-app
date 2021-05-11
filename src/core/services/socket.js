@@ -1,6 +1,9 @@
 import io from 'socket.io-client';
 
-const SOCKET_URL = 'http://' + window.location.hostname + ':8095';
+/*eslint-disable no-eval */
+const apiHost = process.env.REACT_APP_API_HOST.includes('window') ? eval(process.env.REACT_APP_API_HOST) : process.env.REACT_APP_API_HOST;
+
+const SOCKET_URL = 'http://' + apiHost + ':' + process.env.REACT_APP_API_PORT;
 
 const configSocket = {
   withCredentials: true,

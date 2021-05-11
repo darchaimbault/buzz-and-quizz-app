@@ -13,7 +13,10 @@ import 'primeflex/primeflex.css';
 
 dotenv.config();
 
-axios.defaults.baseURL = 'http://' + window.location.hostname + ':8095/api';
+/*eslint-disable no-eval */
+const apiHost = process.env.REACT_APP_API_HOST.includes('window') ? eval(process.env.REACT_APP_API_HOST) : process.env.REACT_APP_API_HOST;
+
+axios.defaults.baseURL = 'http://' + apiHost + ':' + process.env.REACT_APP_API_PORT + '/api';
 axios.defaults.withCredentials = true;
 
 ReactDOM.render(
