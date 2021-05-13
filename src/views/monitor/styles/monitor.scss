@@ -9,23 +9,27 @@ $secondary-color: #f7d08a;
 
   .p-card {
     background-color: $secondary-color;
-    width: 49%;
+    width: 48%;
     position: relative;
 
     &.nb-players-1, &.nb-players-2, &.nb-players-3, &.nb-players-4 {
-      width: 49%;
+      width: 46%;
     }
 
     &.nb-players-5, &.nb-players-6 {
-      width: 32%;
+      width: 30%;
     }
 
     &.nb-players-7, &.nb-players-8 {
-      width: 24%;
+      width: 21%;
     }
 
     &.nb-players-9, &.nb-players-10 {
-      width: 12%;
+      width: 18%;
+    }
+
+    &.nb-players-11, &.nb-players-12 {
+      width: 14%;
     }
 
     &.is-buzzed {
@@ -90,6 +94,7 @@ $secondary-color: #f7d08a;
         border-top: 1px solid $background-dark-color;
         border-bottom-left-radius: 3px;
         border-bottom-right-radius: 3px;
+        text-align: center;
       }
     }
   }
