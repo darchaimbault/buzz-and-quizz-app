@@ -139,10 +139,12 @@ function Admin() {
   }, []);
 
   useEffect(() => {
-    socket.on('admin:player:join', fetchActiveGame);
-
     socket.on('admin:game:buzz', handleBuzz);
-  }, [fetchActiveGame, handleBuzz]);
+  }, [handleBuzz]);
+
+  useEffect(() => {
+    socket.on('admin:player:join', fetchActiveGame);
+  }, [fetchActiveGame]);
 
   const handleClickToggleQRCode = useCallback(async () => {
     socket.emit('admin:monitor:join-qr-code');
