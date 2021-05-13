@@ -6,6 +6,12 @@
     border-bottom: none;
     padding: 0;
     border-radius: 0;
+    overflow-y: auto;
+    direction: rtl;
+
+    ul {
+      direction: ltr;
+    }
 
     .menu-item {
       &:hover {

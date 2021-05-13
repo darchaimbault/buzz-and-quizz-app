@@ -8,6 +8,7 @@ $secondary-color: #f7d08a;
 
   .admin-content {
     flex: 1;
+    overflow: hidden;
 
     .admin-body {
       flex: 1;
@@ -87,26 +88,46 @@ $secondary-color: #f7d08a;
           border-radius: 0;
 
           &.nb-players-1, &.nb-players-2, &.nb-players-3, &.nb-players-4 {
-            width: 49%;
+            width: 46%;
           }
 
           &.nb-players-5, &.nb-players-6 {
-            width: 32%;
+            width: 30%;
           }
 
           &.nb-players-7, &.nb-players-8 {
-            width: 24%;
+            width: 21%;
           }
 
           &.nb-players-9, &.nb-players-10 {
-            width: 12%;
+            width: 18%;
           }
 
-          .pi-ban {
+          &.nb-players-11, &.nb-players-12 {
+            width: 14%;
+          }
+
+          .p-card-footer {
+            padding: 0;
+
+            .player-card-footer {
+              & > *:last-child {
+                margin-top: 2px;
+              }
+            }
+          }
+
+          .button-option {
             position: absolute;
             top: 2px;
-            right: 2px;
             cursor: pointer;
+            padding: 4px;
+            width: auto;
+            right: 3px;
+
+            &.button-option-delete {
+              right: 32px;
+            }
           }
         }
       }

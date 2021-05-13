@@ -14,10 +14,11 @@ import { Button } from 'primereact/button';
 
 const PlayerFooterCard = (props) => {
   const { player, onClickPlayerToggleFreeze } = props;
+
   return (
-    <div className="player-card-footer p-d-flex p-flex-row p-jc-between">
-      <Button label="Freeze" onClick={() => onClickPlayerToggleFreeze(player)} />
-      <div>{player.score.value}</div>
+    <div className="player-card-footer p-d-flex p-flex-column p-jc-between">
+      <Button label="Freeze" onClick={() => onClickPlayerToggleFreeze(player)} className="p-button-secondary" />
+      <Button label={player.score.value.toString()} className="p-button-success" />
     </div>
   )
 }
@@ -34,7 +35,8 @@ const PlayersGrid = (props) => {
             className={classnames('p-m-2', `nb-players-${players.length}`)}
           >
             {player.nickname}
-            <div className="pi pi-ban" onClick={() => onClickDisconnect(player)} />
+            <Button icon="pi pi-times-circle" className="button-option button-option-delete" />
+            <Button icon="pi pi-ban" className="button-option button-option-disconnect" onClick={() => onClickDisconnect(player)} />
           </Card>
         )
       })}
