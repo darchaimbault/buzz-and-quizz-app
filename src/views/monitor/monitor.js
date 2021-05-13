@@ -66,6 +66,24 @@ function Monitor() {
       })
   }, []);
 
+  const fetchPlayers = useCallback(() => {
+    axios.get(queryString.stringifyUrl({ url: '/users', query: { forActiveGame: true } }))
+      .then(({ data, status }) => {
+        if (data && status === 200) {
+          const newPlayers = data.map(player => {
+            return {
+              ...omit(player, ['games']),
+              score: player.games[0].score
+            };
+          });
+          setCurrentPlayers(newPlayers);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      })
+  }, []);
+
   const closePodium = useCallback(() => {
     history.goBack();
   }, [history]);
@@ -91,31 +109,41 @@ function Monitor() {
   }, []);
 
   useEffect(() => {
-    socket.on('monitor:show:join-qr-code', () => {
-      setIsDisplayQrCode(!isDisplayQrCode);
-    });
-
-    socket.on('monitor:game:start', () => {
-      fetchActiveGame();
-    });
-
-    socket.on('player:players:unavailable', () => {
-      fetchActiveGame();
-    });
-
     socket.on('monitor:game:score', () => {
-      fetchActiveGame();
+      fetchPlayers();
       setIsRight(true);
       setTimeout(() => {
         setIsRight(false);
         setBuzzedPlayer(null);
       }, 1000);
     });
+  }, [fetchPlayers]);
 
+  useEffect(() => {
+    socket.on('monitor:game:start', () => {
+      fetchActiveGame();
+    });
+  }, [fetchActiveGame]);
+
+  useEffect(() => {
+    socket.on('player:players:unavailable', () => {
+      fetchActiveGame();
+    });
+  }, [fetchActiveGame]);
+
+  useEffect(() => {
+    socket.on('monitor:show:join-qr-code', () => {
+      setIsDisplayQrCode(!isDisplayQrCode);
+    });
+  }, [isDisplayQrCode]);
+
+  useEffect(() => {
     socket.on('monitor:game:buzz', ({ userId }) => {
       setBuzzedPlayer(currentPlayers.find(player => player.id === userId));
     });
+  }, [currentPlayers]);
 
+  useEffect(() => {
     socket.on('monitor:game:false', () => {
       setIsFalse(true);
       setTimeout(() => {
@@ -123,27 +151,43 @@ function Monitor() {
         setBuzzedPlayer(null);
       }, 1000);
     });
+  }, []);
 
+  useEffect(() => {
     socket.on('monitor:game:cancel', () => {
       setBuzzedPlayer(null);
     });
+  }, []);
 
+  useEffect(() => {
     socket.on('monitor:podium:open', () => {
       openPodium();
     });
+  }, [openPodium]);
 
+  useEffect(() => {
     socket.on('monitor:podium:close', () => {
       closePodium();
     });
+  }, [closePodium]);
 
+  useEffect(() => {
     socket.on('monitor:ranking:open', () => {
       openRanking();
     });
+  }, [openRanking]);
 
+  useEffect(() => {
     socket.on('monitor:ranking:close', () => {
       closeRanking();
     });
-  }, [isDisplayQrCode, fetchActiveGame, openPodium, closePodium, openRanking, closeRanking, currentPlayers]);
+  }, [closeRanking]);
+
+  useEffect(() => {
+    socket.on('monitor:game:stop', () => {
+      document.location.reload();
+    });
+  }, []);
   
   return (
     <div className="monitor p-d-flex p-flex-row p-flex-wrap p-ai-center p-jc-center">
