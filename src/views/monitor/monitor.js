@@ -19,10 +19,18 @@ import ModalRoute from '../../core/components/modalRoute';
 import './styles/monitor.scss';
 
 function PlayerComponent(props) {
-  const { player, buzzedPlayer, isRight, isFalse, nbPlayers } = props;
+  const { player, buzzedPlayer, isRightPlayerId, isFalsePlayerId, nbPlayers } = props;
   const isBuzzed = useMemo(() => {
     return buzzedPlayer && (player.id === buzzedPlayer.id);
   }, [player, buzzedPlayer]);
+
+  const isRight = useMemo(() => {
+    return player.id === isRightPlayerId;
+  }, [isRightPlayerId, player.id]);
+
+  const isFalse = useMemo(() => {
+    return player.id === isFalsePlayerId;
+  }, [isFalsePlayerId, player.id]);
 
   return (
     <Card
@@ -43,28 +51,12 @@ function PlayerComponent(props) {
 
 function Monitor() {
   const [isDisplayQrCode, setIsDisplayQrCode] = useState(false);
-  const [isFalse, setIsFalse] = useState(false);
-  const [isRight, setIsRight] = useState(false);
+  const [isFalse, setIsFalse] = useState(null);
+  const [isRight, setIsRight] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
   const [currentPlayers, setCurrentPlayers] = useState([]);
   const [buzzedPlayer, setBuzzedPlayer] = useState(null);
   const history = useHistory();
-
-  const fetchActiveGame = useCallback(() => {
-    axios.get(queryString.stringifyUrl({ url: '/games/active', query: { withPlayers: true } }))
-      .then(({ data, status }) => {
-        if (data && status === 200) {
-          setCurrentPlayers(data.users.map(user => ({
-            ...user,
-            isFrozen: false
-          })));
-          setActiveGame(omit(data, ['users']));
-        }
-      })
-      .catch(error => {
-        console.log(error);
-      })
-  }, []);
 
   const fetchPlayers = useCallback(() => {
     axios.get(queryString.stringifyUrl({ url: '/users', query: { forActiveGame: true } }))
@@ -77,6 +69,18 @@ function Monitor() {
             };
           });
           setCurrentPlayers(newPlayers);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      })
+  }, []);
+
+  const fetchActiveGame = useCallback(() => {
+    axios.get(queryString.stringifyUrl({ url: '/games/active' }))
+      .then(({ data, status }) => {
+        if (data && status === 200) {
+          setActiveGame(omit(data, ['users']));
         }
       })
       .catch(error => {
@@ -102,6 +106,7 @@ function Monitor() {
 
   useEffect(() => {
     fetchActiveGame();
+    fetchPlayers();
 
     socket.auth = { monitor: true };
     socket.open();
@@ -109,12 +114,13 @@ function Monitor() {
   }, []);
 
   useEffect(() => {
-    socket.on('monitor:game:score', () => {
+    socket.on('monitor:game:score', ({ userId }) => {
+      setIsRight(userId);
+      setBuzzedPlayer(null);
       fetchPlayers();
-      setIsRight(true);
+
       setTimeout(() => {
-        setIsRight(false);
-        setBuzzedPlayer(null);
+        setIsRight(null);
       }, 1000);
     });
   }, [fetchPlayers]);
@@ -122,14 +128,15 @@ function Monitor() {
   useEffect(() => {
     socket.on('monitor:game:start', () => {
       fetchActiveGame();
+      fetchPlayers();
     });
-  }, [fetchActiveGame]);
+  }, [fetchActiveGame, fetchPlayers]);
 
   useEffect(() => {
     socket.on('player:players:unavailable', () => {
-      fetchActiveGame();
+      fetchPlayers();
     });
-  }, [fetchActiveGame]);
+  }, [fetchPlayers]);
 
   useEffect(() => {
     socket.on('monitor:show:join-qr-code', () => {
@@ -144,11 +151,11 @@ function Monitor() {
   }, [currentPlayers]);
 
   useEffect(() => {
-    socket.on('monitor:game:false', () => {
-      setIsFalse(true);
+    socket.on('monitor:game:false', ({ userId }) => {
+      setIsFalse(userId);
+      setBuzzedPlayer(null);
       setTimeout(() => {
-        setIsFalse(false);
-        setBuzzedPlayer(null);
+        setIsFalse(null);
       }, 1000);
     });
   }, []);
@@ -201,8 +208,8 @@ function Monitor() {
             player={player}
             buzzedPlayer={buzzedPlayer}
             key={player.id}
-            isFalse={isFalse}
-            isRight={isRight}
+            isFalsePlayerId={isFalse}
+            isRightPlayerId={isRight}
             nbPlayers={currentPlayers.length}
           />
         )

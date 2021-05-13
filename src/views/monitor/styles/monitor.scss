@@ -34,17 +34,17 @@ $secondary-color: #f7d08a;
 
     &.is-buzzed {
       box-shadow: 0px 0px 31px 12px $secondary-color;
+    }
 
-      &.is-right {
-        .addPoint {
-          opacity: 0.9;
-        }
+    &.is-right {
+      .addPoint {
+        opacity: 0.9;
       }
-  
-      &.is-false {
-        .false {
-          opacity: 0.9;
-        }
+    }
+
+    &.is-false {
+      .false {
+        opacity: 0.9;
       }
     }
 
