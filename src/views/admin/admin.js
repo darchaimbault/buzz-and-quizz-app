@@ -173,6 +173,7 @@ function Admin() {
         if (status === 200) {
           setActiveGame(null);
           udpateGame(data);
+          setCurrentPlayers([]);
         }
       } else {
         const { status, data } = await axios.put(queryString.stringifyUrl({ url: `/games/${selectedGameId}/start` }));
