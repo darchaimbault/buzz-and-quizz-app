@@ -118,6 +118,10 @@ function Player() {
       fetchActiveGame();
     });
 
+    socket.on('player:game:stop', () => {
+      document.location.reload();
+    });
+
     socket.on('player:game:freeze', () => {
       setIsFrozen(true);
     });
