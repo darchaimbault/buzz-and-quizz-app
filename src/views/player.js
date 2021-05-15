@@ -17,14 +17,13 @@ const playerColorTint = colorTintsRange[random(0, colorTintsRange.length)];
 const playerColor = colorRange[random(0, colorRange.length)];
 const playerColorValue = `var(--${playerColor}-${playerColorTint})`;
 
-function NotConnectedComponent(props) {
+const NotConnectedComponent = () => {
   return (
-    <div className="not-connected">
-    </div>
+    <div className="not-connected"/>
   );
 };
 
-function ConnectedComponent(props) {
+const ConnectedComponent = (props) => {
   const { onClickDisconnect, onClickBuzz, isFrozen, isBuzzed } = props;
   const classNames = {
     'buzz-frozen': isFrozen,
@@ -113,52 +112,6 @@ function Player() {
     document.location.reload();
   }, []);
 
-  useEffect(() => {
-    socket.on('player:game:start', () => {
-      fetchActiveGame();
-    });
-
-    socket.on('player:game:stop', () => {
-      document.location.reload();
-    });
-
-    socket.on('player:game:freeze', () => {
-      setIsFrozen(true);
-    });
-
-    socket.on('players:game:freeze', () => {
-      setIsFrozen(!isFrozen);
-    });
-
-    socket.on('player:game:unfreeze', () => {
-      setIsFrozen(false);
-    });
-
-    socket.on('player:players:available', (playerId) => {
-      addAvailablePlayer(playerId);
-    });
-
-    socket.on('player:players:unavailable', (playerId) => {
-      removeAvailablePlayer(playerId);
-    });
-    
-    socket.on('player:game:false', ({ time = 5 }) => {
-      setIsBuzzed(false);
-      setIsFrozen(true);
-      setTimeout(() => {
-        setIsFrozen(false);
-      }, time * 1000);
-    });
-
-    socket.on('player:game:cancel', () => {
-      setIsBuzzed(false);
-    });
-
-    socket.on('player:disconnect', () => {
-      handleClickDisconnect();
-    });
-  });
-
   const handleClickPlayer = useCallback(async (player) => {
     const socketId = socket.id;
 
@@ -182,6 +135,98 @@ function Player() {
     }
     return 'New Player'
   }, [user]);
+
+  /**************************************************
+   *************** Websocket Handlers ***************
+   **************************************************/
+
+  useEffect(() => {
+    socket.on('player:game:start', () => {
+      fetchActiveGame();
+    });
+  }, [fetchActiveGame]);
+
+  useEffect(() => {
+    socket.on('player:game:stop', () => {
+      document.location.reload();
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on('player:game:freeze', () => {
+      setIsFrozen(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on('players:game:freeze', () => {
+      setIsFrozen(true);
+    });
+  }, [isFrozen]);
+
+  useEffect(() => {
+    socket.on('players:game:unfreeze', () => {
+      setIsFrozen(false);
+    });
+  }, [isFrozen]);
+
+  useEffect(() => {
+    socket.on('player:game:unfreeze', () => {
+      setIsFrozen(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on('player:players:available', (playerId) => {
+      addAvailablePlayer(playerId);
+    });
+  }, [addAvailablePlayer]);
+
+  useEffect(() => {
+    socket.on('player:players:unavailable', (playerId) => {
+      removeAvailablePlayer(playerId);
+    });
+  }, [removeAvailablePlayer]);
+
+  useEffect(() => {
+    socket.on('player:game:false', ({ time = 5 }) => {
+      setIsBuzzed(false);
+      setIsFrozen(true);
+      setTimeout(() => {
+        setIsFrozen(false);
+      }, time * 1000);
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on('player:game:cancel', () => {
+      setIsBuzzed(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on('player:game:addPoint', ({ point = 1 }) => {
+      if (point === 1) {
+        setIsFrozen(true);
+        setIsBuzzed(false);
+        setTimeout(() => {
+          setIsFrozen(false);
+        }, 1000);
+      } else {
+        setIsBuzzed(false);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on('player:disconnect', () => {
+      handleClickDisconnect();
+    });
+  }, [handleClickDisconnect]);
+
+  /**************************************************
+   ********************* Render *********************
+   **************************************************/
 
   return (
     <div className="player p-d-flex p-flex-column">
