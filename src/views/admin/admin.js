@@ -70,9 +70,9 @@ const BuzzerView = (props) => {
       <div className="buzzer-body">
         <div className="buzzer-nickname">{player.nickname}</div>
         <div className="buzzer-add-point">
-          <Button label="+1" value="1" onClick={handleClickAddPoint} />
-          <Button label="+2" value="2" onClick={handleClickAddPoint} />
-          <Button label="+3" value="3" onClick={handleClickAddPoint} />
+          <Button label="+1" onClick={() => handleClickAddPoint(1)} />
+          <Button label="+2" onClick={() => handleClickAddPoint(2)} />
+          <Button label="+3" onClick={() => handleClickAddPoint(3)} />
         </div>
         <div className="buzzer-buttons-container">
           <Button label="FALSE" onClick={handleClickFalse} />
