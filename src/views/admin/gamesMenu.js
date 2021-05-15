@@ -53,6 +53,14 @@ function GamesMenu(props) {
   }, [selectedGame]);
 
   const menuModel = useMemo(() => {
+    games.sort((a, b) => {
+      if (a.status === 'ACTIVE' && b.status !== 'ACTIVE') return -1;
+      if (b.status === 'ACTIVE' && a.status !== 'ACTIVE') return 1;
+
+      if (a.status === 'NEW' && b.status !== 'NEW') return -1;
+      if (b.status === 'NEW' && a.status !== 'NEW') return 1;
+      return a.createdAt < b.createdAt;
+    });
     return games.map(game => {
       return {
         label: game.name,
