@@ -3,7 +3,6 @@ import axios from 'axios';
 import queryString from 'query-string';
 import { socket } from '../../core/services/socket';
 import { Menubar } from 'primereact/menubar';
-import omit from 'lodash/omit';
 import { Card } from 'primereact/card';
 import classnames from 'classnames';
 
@@ -30,9 +29,11 @@ const PlayersGrid = (props) => {
       {players.map(player => {
         return (
           <Card 
-            footer={<PlayerFooterCard player={player}
-            onClickPlayerToggleFreeze={onClickPlayerToggleFreeze} />}
+            footer={
+              <PlayerFooterCard player={player} onClickPlayerToggleFreeze={onClickPlayerToggleFreeze} />
+            }
             className={classnames('p-m-2', `nb-players-${players.length}`)}
+            key={player.id}
           >
             {player.nickname}
             <Button icon="pi pi-times-circle" className="button-option button-option-delete" />
@@ -45,7 +46,7 @@ const PlayersGrid = (props) => {
 }
 
 const BuzzerView = (props) => {
-  const { player, resetBuzzer } = props;
+  const { player, resetBuzzer, fetchAndUpdateScores } = props;
 
   const handleClickFalse = useCallback(() => {
     socket.emit('admin:game:false');
@@ -57,13 +58,11 @@ const BuzzerView = (props) => {
     resetBuzzer();
   }, [resetBuzzer]);
 
-  const handleClickAddPoint = useCallback((evt) => {
-    const point = parseInt(evt?.target?.value || "0");
-    socket.emit('admin:game:addPoint', {
-      point
-    });
+  const handleClickAddPoint = useCallback(point => {
+    socket.emit('admin:game:addPoint', { point });
     resetBuzzer();
-  }, [resetBuzzer]);
+    fetchAndUpdateScores();
+  }, [resetBuzzer, fetchAndUpdateScores]);
 
   return (
     <div className="buzzer-container p-d-flex p-jc-center p-ai-center">
@@ -86,23 +85,44 @@ const BuzzerView = (props) => {
 function Admin() {
   const [isPodiumOpen, setIsPodiumOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(false);
+  // const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
+  const [allIsFrozen, setAllIsFrozen] = useState(false);
   const [activeGame, setActiveGame] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [currentPlayers, setCurrentPlayers] = useState([]);
   const [currentBuzzer, setCurrentBuzzer] = useState(null);
   const [games, setGames] = useState([]);
 
-  const fetchActiveGame = useCallback(async () => {
-    const { data } = await axios.get(queryString.stringifyUrl({ url: '/games/active', query: { withPlayers: true } }));
+  const fetchAndUpdateScores = useCallback(() => {
+    axios.get(queryString.stringifyUrl({ url: '/users', query: { forActiveGame: true } }))
+      .then(({ data, status }) => {
+        if (data && status === 200) {
+          setCurrentPlayers(data.map(player => {
+            const currentPlayer = currentPlayers.find(({ id }) => id === player.id);
+            return {
+              ...player,
+              isFrozen: currentPlayer ? currentPlayer.isFrozen : false,
+              score: player.games[0].score
+            };
+          }));
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }, [currentPlayers]);
 
-    if (data) {
-      setCurrentPlayers(data.users.map(user => ({
-        ...user,
-        isFrozen: false
-      })));
-      setActiveGame(omit(data, ['users']));
+  const fetchActiveGame = useCallback(async (options) => {
+    const fetchPlayers = options?.fetchPlayers ?? false;
+    const { data, status } = await axios.get(queryString.stringifyUrl({ url: '/games/active' }));
+
+    if (data && status === 200) {
+      setActiveGame(data);
+      if (fetchPlayers) {
+        fetchAndUpdateScores();
+      }
     }
-  }, []);
+  }, [fetchAndUpdateScores]);
 
   const fetchGames = useCallback(async () => {
     const { data = [], status } = await axios.get(queryString.stringifyUrl({ url: '/games' }));
@@ -130,22 +150,6 @@ function Admin() {
   const resetBuzzer = useCallback(() => {
     setCurrentBuzzer(null);
   }, []);
-
-  useEffect(() => {
-    socket.auth = { admin: true };
-    socket.open();
-
-    fetchActiveGame();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    socket.on('admin:game:buzz', handleBuzz);
-  }, [handleBuzz]);
-
-  useEffect(() => {
-    socket.on('admin:player:join', fetchActiveGame);
-  }, [fetchActiveGame]);
 
   const handleClickToggleQRCode = useCallback(async () => {
     socket.emit('admin:monitor:join-qr-code');
@@ -206,8 +210,14 @@ function Admin() {
   }, []);
 
   const handleClickFreezeAll = useCallback(() => {
-    socket.emit('admin:players:freeze');
-  }, []);
+    if (allIsFrozen) {
+      setAllIsFrozen(false);
+      socket.emit('admin:players:unfreeze');
+    } else {
+      setAllIsFrozen(true);
+      socket.emit('admin:players:freeze');
+    }
+  }, [allIsFrozen]);
 
   const disabledStartStopGameButton = useMemo(() => {
     if (selectedGame != null) {
@@ -257,12 +267,47 @@ function Admin() {
         disabled: isPodiumOpen
       },
       {
-        label: 'Freeze All',
+        label: `${allIsFrozen ? 'Unfreeze' : 'Freeze'} All`,
         command: handleClickFreezeAll
       }
     ]
-  }, [handleClickToggleQRCode, labelStartStopGameButton, handleClickStartGame, disabledStartStopGameButton, isPodiumOpen, handleClickTogglePodium, isRankingOpen, handleClickToggleRanking, handleClickFreezeAll]);
+  }, [
+    handleClickToggleQRCode,
+    labelStartStopGameButton,
+    handleClickStartGame,
+    disabledStartStopGameButton,
+    isPodiumOpen,
+    handleClickTogglePodium,
+    isRankingOpen,
+    handleClickToggleRanking,
+    handleClickFreezeAll,
+    allIsFrozen
+  ]);
+
+  /**************************************************
+   *************** Websocket Handlers ***************
+   **************************************************/
+
+  useEffect(() => {
+    socket.auth = { admin: true };
+    socket.open();
+
+    fetchActiveGame({ fetchPlayers: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    socket.on('admin:game:buzz', handleBuzz);
+  }, [handleBuzz]);
+
+  useEffect(() => {
+    socket.on('admin:player:join', fetchAndUpdateScores);
+  }, [fetchAndUpdateScores]);
   
+  /**************************************************
+   ********************* Render *********************
+   **************************************************/
+
   return (
     <AdminContext.Provider value={{ games, setGames, activeGame, setActiveGame, selectedGame, setSelectedGame, fetchGames }}>
       <div className="admin p-d-flex p-flex-column">
@@ -276,7 +321,7 @@ function Admin() {
             />
             {
               currentBuzzer && (
-                <BuzzerView player={currentBuzzer} resetBuzzer={resetBuzzer} fetchActiveGame={fetchActiveGame} />
+                <BuzzerView player={currentBuzzer} resetBuzzer={resetBuzzer} fetchAndUpdateScores={fetchAndUpdateScores} />
               )
             }
           </div>
