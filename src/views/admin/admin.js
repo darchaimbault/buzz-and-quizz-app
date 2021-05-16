@@ -85,7 +85,7 @@ const BuzzerView = (props) => {
 function Admin() {
   const [isPodiumOpen, setIsPodiumOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(false);
-  // const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
+  const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
   const [allIsFrozen, setAllIsFrozen] = useState(false);
   const [activeGame, setActiveGame] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -152,8 +152,11 @@ function Admin() {
   }, []);
 
   const handleClickToggleQRCode = useCallback(async () => {
-    socket.emit('admin:monitor:join-qr-code');
-  }, []);
+    socket.emit('admin:monitor:qr-code', {
+      open: !isQRCodeOpen
+    });
+    setIsQRCodeOpen(!isQRCodeOpen);
+  }, [isQRCodeOpen]);
 
   const handleClickTogglePodium = useCallback(async () => {
     socket.emit('admin:monitor:podium', {
@@ -253,7 +256,7 @@ function Admin() {
         disabled: disabledStartStopGameButton
       },
       {
-        label: 'Display QRCode',
+        label: `${isQRCodeOpen ? 'Close' : 'Open'} QRCode`,
         command: handleClickToggleQRCode
       },
       {
@@ -281,7 +284,8 @@ function Admin() {
     isRankingOpen,
     handleClickToggleRanking,
     handleClickFreezeAll,
-    allIsFrozen
+    allIsFrozen,
+    isQRCodeOpen
   ]);
 
   /**************************************************

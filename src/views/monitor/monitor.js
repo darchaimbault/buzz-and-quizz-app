@@ -139,8 +139,14 @@ function Monitor() {
   }, [fetchPlayers]);
 
   useEffect(() => {
-    socket.on('monitor:show:join-qr-code', () => {
-      setIsDisplayQrCode(!isDisplayQrCode);
+    socket.on('monitor:qr-code:open', () => {
+      setIsDisplayQrCode(true);
+    });
+  }, [isDisplayQrCode]);
+
+  useEffect(() => {
+    socket.on('monitor:qr-code:close', () => {
+      setIsDisplayQrCode(false);
     });
   }, [isDisplayQrCode]);
 
