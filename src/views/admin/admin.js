@@ -1,15 +1,17 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import axios from 'axios';
 import queryString from 'query-string';
-import { socket } from '../../core/services/socket';
 import { Menubar } from 'primereact/menubar';
 import { Card } from 'primereact/card';
 import classnames from 'classnames';
+import { Button } from 'primereact/button';
 
 import GamesMenu from './gamesMenu';
 import './styles/admin.scss';
 import { AdminContext } from './context/adminContext';
-import { Button } from 'primereact/button';
+import { socket } from '../../core/services/socket';
+
+import useAdminAlreadyUsed from '../../core/hooks/useAdminAlreadyUsed';
 
 const PlayerFooterCard = (props) => {
   const { player, onClickPlayerToggleFreeze } = props;
@@ -92,6 +94,8 @@ function Admin() {
   const [currentPlayers, setCurrentPlayers] = useState([]);
   const [currentBuzzer, setCurrentBuzzer] = useState(null);
   const [games, setGames] = useState([]);
+
+  const { adminAlreadyUsed, isLoading: isCheckingAdminAlreadyUsed } = useAdminAlreadyUsed();
 
   const fetchAndUpdateScores = useCallback(() => {
     axios.get(queryString.stringifyUrl({ url: '/users', query: { forActiveGame: true } }))
@@ -311,6 +315,14 @@ function Admin() {
   /**************************************************
    ********************* Render *********************
    **************************************************/
+
+  if (isCheckingAdminAlreadyUsed) {
+    return 'loading ...';
+  } else {
+    if (adminAlreadyUsed) {
+      return null;
+    }
+  }
 
   return (
     <AdminContext.Provider value={{ games, setGames, activeGame, setActiveGame, selectedGame, setSelectedGame, fetchGames }}>
